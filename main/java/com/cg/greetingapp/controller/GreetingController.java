@@ -1,40 +1,48 @@
 package com.cg.greetingapp.controller;
 
 import com.cg.greetingapp.model.Greeting;
+import com.cg.greetingapp.model.User;
+import com.cg.greetingapp.service.IGreetingService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
+@RequestMapping("/greeting")
 public class GreetingController {
-    private static final String template = "Hello, %s!";
-    private final AtomicLong counter = new AtomicLong();
 
-    @GetMapping("/greeting")
-    public Greeting greeting(@RequestParam(value="name", defaultValue="World") String name) {
-        return new Greeting(counter.incrementAndGet(),
-                String.format(template, name));
+    @Autowired
+    private IGreetingService greetingService;
+
+    @RequestMapping(value = {"","/","/home"})
+    public Greeting greeting(@RequestParam(value = "firstName", defaultValue = "") String firstName,
+                             @RequestParam(value = "lastName", defaultValue = "") String lastName){
+        User user=new User();
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        return greetingService.addGreeting(user);
     }
 
-    @GetMapping("/param/{name}")
-    public Greeting greetingParam(@PathVariable String name) {
-        return new Greeting(counter.incrementAndGet(),
-                String.format(template, name));
+    @GetMapping("/get/{id}")
+    public Optional<Greeting> getGreetingById(@PathVariable long id){
+        return greetingService.getGreetingById(id);
     }
 
-    @RequestMapping(value = {"/query"}, method = RequestMethod.GET)
-    public Greeting greetingQuery(@RequestParam(value="name") String name) {
-        return new Greeting(counter.incrementAndGet(),
-                String.format(template, name));
+    @GetMapping("/get")
+    public List<Greeting> getGreetings(){
+        return greetingService.getAllGreetings();
     }
 
-    @PostMapping("/post")
-    public Greeting sayHello(@RequestBody Greeting greetingObj) {
-        return greetingObj;
+    @PutMapping("/put/{id}")
+    public Greeting updateGreeting(@PathVariable long id,@RequestParam(value = "message") String message){
+        return greetingService.updateGreeting(id,message);
     }
 
-    @PutMapping("/put/{name}")
-    public Greeting sayHello(@PathVariable String name) {
-        return new Greeting(counter.incrementAndGet(),
-                String.format(template, name));
+    @DeleteMapping("/delete/{id}")
+    public void deleteGreeting(@PathVariable long id){
+        greetingService.deleteGreeting(id);
     }
 }
